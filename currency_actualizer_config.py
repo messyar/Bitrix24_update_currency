@@ -1,0 +1,1 @@
+CURRENCY_TO_UPDATE = ['USD', 'EUR', 'KZT', 'PLN']
