@@ -2,6 +2,7 @@ from bitrix24 import Bitrix24, BitrixError
 import requests
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from os import environ
 
 try:
     from currency_actualizer_config import CURRENCY_TO_UPDATE
@@ -51,7 +52,7 @@ def parse_exchange_rates(currency_to_update: list) -> dict:
         for curr_currency in currency_list:
             curr_currency_text = curr_currency.find('CharCode').text
             if curr_currency_text in currency_to_update:
-                result[curr_currency_text] = curr_currency.find('Value').text
+                result[curr_currency_text] = curr_currency.find('Value').text.replace(',', '.')
 
     except ET.ParseError as PE:
         print(PE)
@@ -66,14 +67,36 @@ def update_currency() -> None:
      rate in Bitrix24
     :return: None
     """
+    try:
+        url_to_api = environ['URL_TO_BITRIX24']
+    except Exception as name_error:
+        print("Can't find Environment variable %s" % name_error)
+        return
+
+    bx24 = Bitrix24(url_to_api)
+    try:
+        base_currency = bx24.callMethod('crm.currency.base.get')
+    except BitrixError as message:
+        print(message)
+
+    if not base_currency == 'RUB':
+        print('Base currency not RUB, this script work only if base currency in Bitrix24 is RUB')
+        return
+
     currency_to_update = CURRENCY_TO_UPDATE
     if not CURRENCY_TO_UPDATE:
         print('Please, specify the currencies to update the exchange rate in the currency_actualizer_file.py'
               ' as a list constant named CURRENCY_TO_UPDATE. For example CURRENCY_TO_UPDATE=["USD", "EUR"]')
         return
     currency_pairs = parse_exchange_rates(currency_to_update)
-    for key, value in currency_pairs.items():
-        print(key, value)
+
+    try:
+        for key, value in currency_pairs.items():
+            print(key, value)
+            bx24.callMethod('crm.currency.update', id=key, fields={'AMOUNT_CNT': 1, 'AMOUNT': value})
+
+    except BitrixError as message:
+        print(message)
 
 
 if __name__ == '__main__':
