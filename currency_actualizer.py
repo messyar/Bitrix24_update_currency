@@ -22,17 +22,24 @@ except ImportError as import_error:
           }]""")
 
 
-def parse_exchange_rates(currency_to_update: list) -> dict:
+def parse_exchange_rates(currency_to_update: list) -> list:
     """
     This function parses the exchange rates from the Central bank of Russia website
+    :param: list of string with char code of currency, for example ['USD', 'EUR']
     :return: list of dicts with exchange information from cbr.ru
     """
 
     result = []
+    # check if parameter is right type and not empty
+    if not currency_to_update or type(currency_to_update) != list:
+        return result
+
+    # get day, month and year by int type, to use in request
     day = datetime.now().day
     month = datetime.now().month
     year = datetime.now().year
 
+    # add to day and month lead zeros if it less than 10
     if int(day) < 10:
         day = '0%s' % day
 
@@ -82,18 +89,21 @@ def parse_exchange_rates(currency_to_update: list) -> dict:
 
 def update_currency() -> None:
     """
-    Main function, check if base currency is RUB, if not stop execute, else update exchenge
+    Main function, check if base currency is RUB, if not stop execute, else update exchange
      rate in Bitrix24
     :return: None
     """
+    # try to get url with API key from environment variable
     try:
         url_to_api = environ['URL_TO_BITRIX24']
     except Exception as name_error:
         print("Can't find Environment variable %s" % name_error)
         return
 
+    # creating instance of Bitrix24 class
     bx24 = Bitrix24(url_to_api)
 
+    # check if base currency is RUB, function for present time work only with this case
     try:
         base_currency = bx24.callMethod('crm.currency.base.get')
 
@@ -110,11 +120,14 @@ def update_currency() -> None:
               ' as a list constant named CURRENCY_TO_UPDATE. For example CURRENCY_TO_UPDATE=["USD", "EUR"]')
         return
 
+    # parse exchange rates from cbr.ru by function
     currency_pairs = parse_exchange_rates(currency_to_update)
     if not currency_pairs:
         print("Error! Exchange rate parse from cbr.ru failed.")
         return
 
+    # update exchange rates in Bitrix24, if constant ADD_NEW_CURRENCY set as True in config file then
+    # adding currencies that missing in Bitrix24, else skip this currencies
     not_added_currency = []
     for curr_element in currency_pairs:
         try:
