@@ -108,7 +108,11 @@ def update_currency() -> None:
         base_currency = bx24.callMethod('crm.currency.base.get')
 
     except BitrixError as message:
-        print(message)
+        if message.args[0] == 'Invalid request credentials':
+            print(message)
+            print("Possible it wrong url to API, or can't reach url. Please set correct Environment"
+                  "variable named 'URL_TO_BITRIX24' with url to API, or check connection.")
+        return
 
     if base_currency != 'RUB':
         print('Base currency not RUB, this script work only if base currency in Bitrix24 is RUB')

@@ -1,7 +1,6 @@
 """Tests for currency_actualizer"""
 
 import unittest
-from bitrix24 import Bitrix24
 import currency_actualizer
 
 
@@ -35,3 +34,6 @@ class TestCurrencyActualizer(unittest.TestCase):
     def test_parse_exchange_rates_not_list_but_int(self):
         list_of_currencies = 100
         self.assertEqual(currency_actualizer.parse_exchange_rates(list_of_currencies), [])
+
+    def test_currency_actualizer(self):
+        self.assertIsNone(currency_actualizer.update_currency())
