@@ -5,12 +5,12 @@ from datetime import datetime
 from os import environ
 
 try:
-    from currency_actualizer_config import CURRENCY_TO_UPDATE, ADD_NEW_CURRENCY, LOCALES
+    from currency_actualizer_config import ADD_NEW_CURRENCY, LOCALES
 except ImportError as import_error:
     print("""Config file import error. Possible, you need to create currency_actualizer_config.py
-          with list constant, named CURRENCY_TO_UPDATE
+          with constants
           For example \n
-          CURRENCY_TO_UPDATE=["USD", "EUR"]\n
+          
           ADD_NEW_CURRENCY=True\n
           LOCALES = [{
                         'ru':
@@ -100,6 +100,14 @@ def update_currency() -> None:
         print("Can't find Environment variable %s" % name_error)
         return
 
+    try:
+        currency_to_update = environ['CURRENCY_TO_UPDATE'].split(sep=', ')
+    except Exception as name_error:
+        print("Can't find Environment variable %s" % name_error)
+        print('Please, specify the currencies to update the exchange rate in the Environment variable %s'
+              ' as a list. For example CURRENCY_TO_UPDATE=USD, EUR' % name_error)
+        return
+
     # creating instance of Bitrix24 class
     bx24 = Bitrix24(url_to_api)
 
@@ -118,11 +126,6 @@ def update_currency() -> None:
         print('Base currency not RUB, this script work only if base currency in Bitrix24 is RUB')
         return
 
-    currency_to_update = CURRENCY_TO_UPDATE
-    if not CURRENCY_TO_UPDATE:
-        print('Please, specify the currencies to update the exchange rate in the currency_actualizer_file.py'
-              ' as a list constant named CURRENCY_TO_UPDATE. For example CURRENCY_TO_UPDATE=["USD", "EUR"]')
-        return
 
     # parse exchange rates from cbr.ru by function
     currency_pairs = parse_exchange_rates(currency_to_update)
@@ -153,6 +156,8 @@ def update_currency() -> None:
                         locale[key] = value
 
                         if key == 'ru':
+                            # need to replace the symbol # in UTF-8 hex code, otherwise it is parsed
+                            # as an empty string in Bitrix24
                             locale[key]['FORMAT_STRING'] = '%23' + ' ' + curr_element['Name'].split()[1]
                             locale[key]['FULL_NAME'] = curr_element['Name']
                             locale[key]['THOUSANDS_VARIANT'] = "C"
@@ -173,4 +178,6 @@ def update_currency() -> None:
 
 
 if __name__ == '__main__':
+    print('Start parse')
     update_currency()
+    print('Parse ended successfully')

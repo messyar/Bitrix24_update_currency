@@ -1,8 +1,4 @@
 """
-List of currency need to update
-"""
-CURRENCY_TO_UPDATE = ['USD', 'EUR', 'KZT', 'PLN']
-""" 
 If ADD_NEW_CURRENCY = True currency, that not found in Bitrix24 will be added
 else it'll be ignoring
 """

@@ -1,0 +1,8 @@
+This script parses from cbr.ru currencies and update it in your Bitrix24
+For start to work script you must to define Environment variables
+
+URL_TO_BITRIX24 - url to API of your Bitrix24
+
+CURRENCY_TO_UPDATE - list of currencies to update
+For examle
+CURRENCY_TO_UPDATE=USD, EUR
